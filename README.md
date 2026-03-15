@@ -27,6 +27,10 @@ The app gives you:
 - Built-in Azure AD setup guide
 - Live server logs
 
+<p align="center">
+  <img src="assets/screenshot.png" width="700" alt="Lazy MS Graph MCP App" />
+</p>
+
 ---
 
 ## Quick Start (npm)
