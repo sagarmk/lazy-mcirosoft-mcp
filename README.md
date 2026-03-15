@@ -114,24 +114,51 @@ npm start
 
 ---
 
-## What's Included
+## How It Works
 
-53 tools across 10 Microsoft Graph categories:
+The server exposes **2 MCP tools** to your AI assistant:
 
-| Category | Tools | Examples |
-|----------|-------|---------|
-| **Mail** | 5 | Send emails, list inbox, read messages |
-| **Calendar** | 6 | Create events, find available times, manage meetings |
-| **Users** | 5 | List users, get profiles, create/update accounts |
-| **Files** | 5 | Browse OneDrive, upload/download files, search |
-| **Teams** | 5 | List teams, channels, members |
-| **Contacts** | 5 | Manage contacts |
-| **Groups** | 5 | Create groups, manage membership |
-| **Planner** | 4 | Manage tasks and plans |
-| **SharePoint** | 3 | Browse sites and lists |
-| **OneNote** | 2 | List notebooks, create pages |
+1. **`search_tools`** — discover available Microsoft Graph tools by category or keyword
+2. **`execute_tool`** — run a tool by name with parameters
 
-The server exposes 2 MCP tools: `search_tools` (discover available tools) and `execute_tool` (run them). Your AI assistant uses search to find the right tool, then executes it.
+Your AI assistant browses by category, picks the right tool, and executes it:
+
+```
+You:    "Send an email to john@company.com about the meeting"
+
+AI:     → search_tools({query: "*", category: "mail"})
+        ← returns: mail_list_messages, mail_get_message, mail_send,
+                   mail_create_draft, mail_delete_message
+
+AI:     → execute_tool({tool_name: "mail_send", parameters: {
+            userId: "me",
+            subject: "About the meeting",
+            body: "...",
+            toRecipients: ["john@company.com"]
+          }})
+        ← email sent
+```
+
+This keeps the MCP surface area small (just 2 tools) while giving access to all 53 Microsoft Graph operations — important when you have multiple MCP servers loaded.
+
+---
+
+## All Available Tools
+
+53 tools across 10 categories:
+
+| Category | Tools | Operations |
+|----------|-------|-----------|
+| **users** | 5 | `users_list`, `users_get`, `users_create`, `users_update`, `users_delete` |
+| **mail** | 5 | `mail_list_messages`, `mail_get_message`, `mail_send`, `mail_create_draft`, `mail_delete_message` |
+| **calendar** | 6 | `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`, `calendar_find_available_times` |
+| **contacts** | 5 | `contacts_list`, `contacts_get`, `contacts_create`, `contacts_update`, `contacts_delete` |
+| **files** | 5 | `files_list_in_drive`, `files_get`, `files_upload`, `files_delete`, `files_search` |
+| **teams** | 5 | `teams_list`, `teams_get`, `teams_create`, `teams_list_members`, `teams_list_channels` |
+| **groups** | 5 | `groups_list`, `groups_get`, `groups_create`, `groups_add_member`, `groups_list_members` |
+| **planner** | 4 | `planner_list_tasks`, `planner_get_task`, `planner_create_task`, `planner_update_task` |
+| **sharepoint** | 3 | `sharepoint_list_sites`, `sharepoint_get_site`, `sharepoint_list_items` |
+| **onenote** | 2 | `onenote_list_notebooks`, `onenote_create_page` |
 
 ---
 

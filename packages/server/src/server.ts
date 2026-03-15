@@ -44,22 +44,43 @@ export async function startServer(options: StartOptions): Promise<void> {
     version: "1.0.0",
   });
 
+  // Build category summary for the tool description
+  const categoryList = registry.getCategories().map((cat) => {
+    const tools = registry.getAll().filter((t) => t.category === cat);
+    const names = tools.map((t) => t.name).join(", ");
+    return `  - ${cat} (${tools.length}): ${names}`;
+  }).join("\n");
+
   // Register the search_tools MCP tool
   server.tool(
     "search_tools",
-    "Search available Microsoft Graph tools by query. Returns tool names, descriptions, categories, and parameter schemas. Use this to discover what operations are available before executing them.",
+    `Search available Microsoft Graph tools. Use category filter for best results.
+
+Available categories and tools:
+${categoryList}
+
+Tip: Search by category first (e.g. category="mail") to see all tools in that area, then pick the right one to execute.`,
     {
-      query: z.string().describe("Search query to find relevant tools (e.g., 'send email', 'list users', 'create event')"),
-      category: z.string().optional().describe("Filter by category: users, mail, calendar, contacts, files, teams, sharepoint, planner, onenote, groups"),
-      limit: z.number().optional().describe("Maximum number of results to return (default: 10)"),
+      query: z.string().describe("Search query (e.g., 'send email', 'list users'). Use broad terms or just pass '*' with a category filter to list all tools in a category."),
+      category: z.string().optional().describe("Filter by category for targeted results. One of: " + registry.getCategories().join(", ")),
+      limit: z.number().optional().describe("Maximum results to return (default: 10, use higher to see more)"),
     },
     async ({ query, category, limit }) => {
+      // If query is '*' or empty-ish with a category, return all tools in that category
+      const isWildcard = query === "*" || query === "all" || query === "list";
+      const effectiveLimit = limit ?? (isWildcard && category ? 50 : 10);
+
       const results = registry.search(query, {
         category: category as any,
-        limit: limit ?? 10,
+        limit: effectiveLimit,
       });
 
-      const toolInfos = results.map(toolToInfo);
+      // If wildcard with category and no search results, fall back to listing all in category
+      let toolInfos = results.map(toolToInfo);
+      if (isWildcard && category && toolInfos.length === 0) {
+        const allTools = registry.getAll().filter((t) => t.category === category);
+        toolInfos = allTools.map(toolToInfo);
+      }
 
       return {
         content: [
@@ -70,6 +91,7 @@ export async function startServer(options: StartOptions): Promise<void> {
                 tools: toolInfos,
                 total: toolInfos.length,
                 query,
+                category: category || "all",
                 available_categories: registry.getCategories(),
               },
               null,
