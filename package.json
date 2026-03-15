@@ -1,0 +1,19 @@
+{
+  "name": "lazy-ms-graph-mcp",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Microsoft Graph MCP Server - Access Microsoft 365 from Claude, Cursor, and VS Code",
+  "author": "Sagar Mankari",
+  "license": "MIT",
+  "workspaces": [
+    "packages/shared",
+    "packages/server"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:shared": "npm run build -w packages/shared",
+    "build:server": "npm run build -w packages/server",
+    "dev:server": "npm run dev -w packages/server",
+    "start": "npm run start -w packages/server"
+  }
+}
