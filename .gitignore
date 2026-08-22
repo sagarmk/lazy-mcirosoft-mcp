@@ -8,6 +8,6 @@ out/
 release-assets/
 # Agent scratch — screenshots go to the board, not the repository.
 # runner.md and checks.sh are repo config and stay tracked.
-.bubble/
+.bubble/*
 !.bubble/runner.md
 !.bubble/checks.sh
