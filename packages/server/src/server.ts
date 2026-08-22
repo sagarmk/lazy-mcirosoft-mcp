@@ -12,6 +12,20 @@ import { registerTenantTools } from "./tools/tenants.js";
 import { logger } from "./utils/logger.js";
 import { formatGraphError } from "./utils/graph-helpers.js";
 
+/**
+ * The tenant roster is baked into the execute_tool schema at startup so the
+ * AI can pick the right profile without a tenants_list round-trip.
+ */
+function describeTenantArg(manager: TenantManager): string {
+  const base = "Tenant profile name to execute against. Defaults to the current default tenant.";
+  const tenants = manager.list();
+  if (tenants.length <= 1) return `${base} (from tenants_list)`;
+  const roster = tenants
+    .map((t) => `'${t.name}'${t.isDefault ? " (default)" : ""}${t.description ? ` — ${t.description}` : ""}`)
+    .join("; ");
+  return `${base} Available tenants: ${roster}`;
+}
+
 export interface StartOptions {
   tenants: TenantConfig[];
   defaultTenant?: string;
@@ -111,7 +125,7 @@ Tip: Search by category first (e.g. category="mail") to see all tools in that ar
     {
       tool_name: z.string().describe("The exact name of the tool to execute (from search_tools results)"),
       parameters: z.record(z.unknown()).describe("Parameters for the tool as a JSON object"),
-      tenant: z.string().optional().describe("Tenant profile name to execute against (from tenants_list). Defaults to the current default tenant."),
+      tenant: z.string().optional().describe(describeTenantArg(tenantManager)),
     },
     async ({ tool_name, parameters, tenant }) => {
       const tool = registry.get(tool_name);

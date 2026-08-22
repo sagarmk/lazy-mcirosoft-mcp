@@ -11,7 +11,7 @@ export function registerTenantTools(registry: ToolRegistry, manager: TenantManag
     name: "tenants_list",
     category: "tenants",
     description:
-      "List all configured Entra ID (Azure AD) tenant profiles. Shows each profile's name, tenant ID, client ID, and which one is the default. Pass a profile name as the 'tenant' argument of execute_tool to run any tool against that tenant.",
+      "List all configured Entra ID (Azure AD) tenant profiles. Shows each profile's name, description (when to use it), tenant ID, client ID, and which one is the default. Pass a profile name as the 'tenant' argument of execute_tool to run any tool against that tenant.",
     keywords: ["tenants", "tenant", "entra", "azure", "directory", "list", "profiles", "accounts", "organizations"],
     parameters: z.object({}),
     handler: async () => {

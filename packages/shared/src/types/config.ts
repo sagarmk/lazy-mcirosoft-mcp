@@ -10,6 +10,8 @@ export interface AuthConfig {
  */
 export interface TenantConfig extends AuthConfig {
   name: string;
+  /** Human/AI-facing note on when to use this tenant (shown in tenants_list). */
+  description?: string;
 }
 
 export interface ServerConfig {

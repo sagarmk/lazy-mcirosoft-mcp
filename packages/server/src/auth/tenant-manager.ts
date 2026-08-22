@@ -8,6 +8,8 @@ export interface TenantSummary {
   tenantId: string;
   clientId: string;
   isDefault: boolean;
+  /** When to use this tenant — surfaced to the AI via tenants_list. */
+  description?: string;
 }
 
 interface TenantEntry {
@@ -62,6 +64,7 @@ export class TenantManager {
       tenantId: config.tenantId,
       clientId: config.clientId,
       isDefault: config.name === this.defaultName,
+      ...(config.description ? { description: config.description } : {}),
     }));
   }
 
@@ -75,6 +78,7 @@ export class TenantManager {
       tenantId: entry.config.tenantId,
       clientId: entry.config.clientId,
       isDefault: true,
+      ...(entry.config.description ? { description: entry.config.description } : {}),
     };
   }
 

@@ -13,7 +13,7 @@ export interface ResolveOptions {
   warn?: (message: string) => void;
 }
 
-const NAMED_ENV_PATTERN = /^MSGRAPH_TENANT_(.+)_(CLIENT_ID|CLIENT_SECRET|TENANT_ID)$/;
+const NAMED_ENV_PATTERN = /^MSGRAPH_TENANT_(.+)_(CLIENT_ID|CLIENT_SECRET|TENANT_ID|DESCRIPTION)$/;
 
 /**
  * Collect Entra ID tenant profiles from the environment. Sources, in
@@ -127,6 +127,7 @@ function parseTenantsJson(raw: string, source: string): TenantConfig[] {
       clientId: typeof record.clientId === "string" ? record.clientId : "",
       clientSecret: typeof record.clientSecret === "string" ? record.clientSecret : "",
       tenantId: typeof record.tenantId === "string" ? record.tenantId : "",
+      ...(typeof record.description === "string" && record.description ? { description: record.description } : {}),
     };
     const missing = (["name", "clientId", "clientSecret", "tenantId"] as const).filter((key) => !tenant[key]);
     if (missing.length > 0) {
@@ -146,6 +147,7 @@ function collectNamedEnvTenants(env: NodeJS.ProcessEnv, warn: (message: string) 
     const entry = partial.get(name) ?? {};
     if (match[2] === "CLIENT_ID") entry.clientId = value;
     else if (match[2] === "CLIENT_SECRET") entry.clientSecret = value;
+    else if (match[2] === "DESCRIPTION") entry.description = value;
     else entry.tenantId = value;
     partial.set(name, entry);
   }
@@ -153,7 +155,13 @@ function collectNamedEnvTenants(env: NodeJS.ProcessEnv, warn: (message: string) 
   const tenants: TenantConfig[] = [];
   for (const [name, entry] of partial) {
     if (entry.clientId && entry.clientSecret && entry.tenantId) {
-      tenants.push({ name, clientId: entry.clientId, clientSecret: entry.clientSecret, tenantId: entry.tenantId });
+      tenants.push({
+        name,
+        clientId: entry.clientId,
+        clientSecret: entry.clientSecret,
+        tenantId: entry.tenantId,
+        ...(entry.description ? { description: entry.description } : {}),
+      });
     } else {
       const upper = name.toUpperCase();
       warn(

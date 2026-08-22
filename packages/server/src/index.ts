@@ -4,6 +4,26 @@ import { startServer } from "./server.js";
 import { resolveTenants } from "./config/tenant-config.js";
 import { logger } from "./utils/logger.js";
 
+// --print-tools: dump the tool catalog as JSON and exit (used by the macOS
+// app's Tools page so it never goes stale). Needs no credentials.
+async function printTools(): Promise<void> {
+  const { ToolRegistry } = await import("./registry/tool-registry.js");
+  const { registerAllTools } = await import("./tools/index.js");
+  const { registerTenantTools } = await import("./tools/tenants.js");
+  const { TenantManager } = await import("./auth/tenant-manager.js");
+
+  const registry = new ToolRegistry();
+  registerAllTools(registry);
+  registerTenantTools(registry, new TenantManager([]));
+
+  const tools = registry.getAll().map((tool) => ({
+    name: tool.name,
+    category: tool.category,
+    description: tool.description,
+  }));
+  process.stdout.write(JSON.stringify({ total: tools.length, tools }, null, 2));
+}
+
 function getConfig() {
   const port = parseInt(process.env.MSGRAPH_MCP_PORT || process.env.MICROSOFT_MCP_PORT || "3100", 10);
   const transport = (process.env.MSGRAPH_MCP_TRANSPORT || process.env.MICROSOFT_MCP_TRANSPORT || "stdio") as "stdio" | "sse";
@@ -25,6 +45,10 @@ function getConfig() {
 }
 
 async function main() {
+  if (process.argv.includes("--print-tools")) {
+    await printTools();
+    return;
+  }
   try {
     const config = getConfig();
     logger.info(`Starting Lazy MS Graph MCP Server (transport: ${config.transport})`);
