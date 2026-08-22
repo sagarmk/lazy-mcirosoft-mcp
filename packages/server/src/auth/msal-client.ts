@@ -2,17 +2,14 @@ import { ConfidentialClientApplication } from "@azure/msal-node";
 import type { AuthConfig } from "lazy-ms-graph-mcp-shared";
 import { GRAPH_SCOPES } from "lazy-ms-graph-mcp-shared";
 
-let msalInstance: ConfidentialClientApplication | null = null;
-
 export function createMsalClient(config: AuthConfig): ConfidentialClientApplication {
-  msalInstance = new ConfidentialClientApplication({
+  return new ConfidentialClientApplication({
     auth: {
       clientId: config.clientId,
       clientSecret: config.clientSecret,
       authority: `https://login.microsoftonline.com/${config.tenantId}`,
     },
   });
-  return msalInstance;
 }
 
 export async function getAccessToken(msal: ConfidentialClientApplication): Promise<string> {

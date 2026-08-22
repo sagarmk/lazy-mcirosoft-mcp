@@ -4,6 +4,14 @@ export interface AuthConfig {
   tenantId: string;
 }
 
+/**
+ * A named Entra ID (Azure AD) app registration. The server can hold several of
+ * these at once; `name` is the profile key used to select one at execution time.
+ */
+export interface TenantConfig extends AuthConfig {
+  name: string;
+}
+
 export interface ServerConfig {
   port: number;
   transport: "stdio" | "sse";
@@ -12,6 +20,10 @@ export interface ServerConfig {
 
 export interface AppConfig {
   auth: AuthConfig;
+  /** Additional named Entra ID tenants beyond `auth` (which stays the default). */
+  tenants?: TenantConfig[];
+  /** Name of the tenant profile to use when a call does not specify one. */
+  defaultTenant?: string;
   server: ServerConfig;
   app: {
     minimizeToTray: boolean;

@@ -3,39 +3,40 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { z } from "zod";
 import { createServer } from "http";
-import type { AuthConfig } from "lazy-ms-graph-mcp-shared";
-import { createMsalClient } from "./auth/msal-client.js";
-import { createGraphClient } from "./auth/graph-client.js";
+import type { TenantConfig } from "lazy-ms-graph-mcp-shared";
+import { TenantManager } from "./auth/tenant-manager.js";
 import { ToolRegistry } from "./registry/tool-registry.js";
 import { toolToInfo } from "./registry/tool-definition.js";
 import { registerAllTools } from "./tools/index.js";
+import { registerTenantTools } from "./tools/tenants.js";
 import { logger } from "./utils/logger.js";
 import { formatGraphError } from "./utils/graph-helpers.js";
 
 export interface StartOptions {
-  auth: AuthConfig;
+  tenants: TenantConfig[];
+  defaultTenant?: string;
   transport: "stdio" | "sse";
   port: number;
 }
 
 export async function startServer(options: StartOptions): Promise<void> {
-  const { auth, transport, port } = options;
+  const { tenants, defaultTenant, transport, port } = options;
 
-  // Create auth + graph client
-  const hasCredentials = auth.clientId && auth.clientSecret && auth.tenantId;
-  let graphClient: import("@microsoft/microsoft-graph-client").Client | null = null;
+  // One MSAL + Graph client pair per tenant, created lazily on first use
+  const tenantManager = new TenantManager(tenants, defaultTenant);
 
-  if (hasCredentials) {
-    logger.info("Initializing MSAL client...");
-    const msal = createMsalClient(auth);
-    graphClient = createGraphClient(msal);
-  } else {
+  if (tenantManager.size() === 0) {
     logger.warn("No credentials configured. Tool search will work but execution will fail until credentials are provided.");
+  } else {
+    logger.info(
+      `Configured ${tenantManager.size()} Entra ID tenant(s): ${tenantManager.names().join(", ")} (default: ${tenantManager.getDefaultName()})`
+    );
   }
 
   // Create tool registry and register all tools
   const registry = new ToolRegistry();
   registerAllTools(registry);
+  registerTenantTools(registry, tenantManager);
   logger.info(`Registered ${registry.size()} tools across ${registry.getCategories().length} categories`);
 
   // Create MCP server
@@ -106,26 +107,13 @@ Tip: Search by category first (e.g. category="mail") to see all tools in that ar
   // Register the execute_tool MCP tool
   server.tool(
     "execute_tool",
-    "Execute a Microsoft Graph tool by name with the given parameters. Use search_tools first to discover available tools and their required parameters.",
+    "Execute a Microsoft Graph tool by name with the given parameters. Use search_tools first to discover available tools and their required parameters. When multiple Entra ID tenants are configured, pass 'tenant' to target a specific one (see tenants_list); otherwise the default tenant is used.",
     {
       tool_name: z.string().describe("The exact name of the tool to execute (from search_tools results)"),
       parameters: z.record(z.unknown()).describe("Parameters for the tool as a JSON object"),
+      tenant: z.string().optional().describe("Tenant profile name to execute against (from tenants_list). Defaults to the current default tenant."),
     },
-    async ({ tool_name, parameters }) => {
-      if (!graphClient) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify({
-                error: "No credentials configured. Set MSGRAPH_CLIENT_ID, MSGRAPH_CLIENT_SECRET, and MSGRAPH_TENANT_ID.",
-              }),
-            },
-          ],
-          isError: true,
-        };
-      }
-
+    async ({ tool_name, parameters, tenant }) => {
       const tool = registry.get(tool_name);
       if (!tool) {
         return {
@@ -139,6 +127,28 @@ Tip: Search by category first (e.g. category="mail") to see all tools in that ar
           ],
           isError: true,
         };
+      }
+
+      // Tenant-management tools don't call the Graph API, so they run even
+      // with no credentials configured; everything else needs a client.
+      let graphClient: import("@microsoft/microsoft-graph-client").Client | null = null;
+      try {
+        graphClient = tenantManager.getClient(tenant);
+      } catch (error) {
+        if (tool.category !== "tenants") {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify({
+                  error: error instanceof Error ? error.message : String(error),
+                  available_tenants: tenantManager.names(),
+                }),
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       try {
@@ -212,7 +222,14 @@ Tip: Search by category first (e.g. category="mail") to see all tools in that ar
       // Health check
       if (req.url === "/health") {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ status: "ok", tools: registry.size() }));
+        res.end(
+          JSON.stringify({
+            status: "ok",
+            tools: registry.size(),
+            tenants: tenantManager.names(),
+            default_tenant: tenantManager.getDefaultName(),
+          })
+        );
         return;
       }
 
