@@ -21,14 +21,19 @@
 **[Download the latest DMG](https://github.com/sagarmk/lazy-mcirosoft-mcp/releases/latest)** and drag it to Applications. That's it.
 
 The app gives you:
-- One-click server start/stop
+- One-click server start/stop with live logs
+- **Multiple Entra ID tenants** — add several Azure AD app registrations, each with a description that tells the AI when to use it
 - Encrypted credential storage
-- Auto-install buttons for Claude Code and Cursor
+- Auto-install buttons for Claude Code and Cursor (multi-tenant configs included)
+- Live, searchable catalog of all 63 tools
 - Built-in Azure AD setup guide
-- Live server logs
 
 <p align="center">
-  <img src="assets/screenshot.png" width="700" alt="Lazy MS Graph MCP App" />
+  <img src="assets/screenshot.png" width="700" alt="Lazy MS Graph MCP App — Overview" />
+</p>
+
+<p align="center">
+  <img src="assets/screenshot-tenants.png" width="700" alt="Managing Entra ID tenants with AI-facing descriptions" />
 </p>
 
 ---
@@ -171,23 +176,28 @@ This keeps the MCP surface area small (just 2 tools) while giving access to all 
 
 The server can hold several Entra ID (Azure AD) app registrations at once and route each call to the right one. Configure tenants any of these ways (they can be combined; on a name clash the first source wins):
 
-**Inline JSON** — set `MSGRAPH_TENANTS` to an array (or an object map keyed by name):
+**macOS app** — the **Tenants** page manages profiles visually: add each app registration, give it a description ("when should the AI use this tenant?"), and pick a default. The description is surfaced to the AI through `tenants_list`, and the whole roster is baked into the `execute_tool` schema at startup, so the assistant picks the right tenant on its own.
+
+**Inline JSON** — set `MSGRAPH_TENANTS` to an array (or an object map keyed by name). `description` is optional but strongly recommended — it is what the AI routes on:
 
 ```json
 [
-  { "name": "contoso",  "clientId": "...", "clientSecret": "...", "tenantId": "..." },
-  { "name": "fabrikam", "clientId": "...", "clientSecret": "...", "tenantId": "..." }
+  { "name": "contoso",  "clientId": "...", "clientSecret": "...", "tenantId": "...",
+    "description": "Main company tenant — use unless another tenant is named." },
+  { "name": "fabrikam", "clientId": "...", "clientSecret": "...", "tenantId": "...",
+    "description": "Fabrikam engagement — use for anything about the Fabrikam project." }
 ]
 ```
 
 **JSON file** — set `MSGRAPH_TENANTS_FILE=/path/to/tenants.json` with the same shape.
 
-**Per-tenant environment variables** — one triple per tenant:
+**Per-tenant environment variables** — one triple per tenant (plus an optional description):
 
 ```bash
 MSGRAPH_TENANT_CONTOSO_CLIENT_ID="..."
 MSGRAPH_TENANT_CONTOSO_CLIENT_SECRET="..."
 MSGRAPH_TENANT_CONTOSO_TENANT_ID="..."
+MSGRAPH_TENANT_CONTOSO_DESCRIPTION="Main company tenant — use unless another tenant is named."
 MSGRAPH_TENANT_FABRIKAM_CLIENT_ID="..."
 MSGRAPH_TENANT_FABRIKAM_CLIENT_SECRET="..."
 MSGRAPH_TENANT_FABRIKAM_TENANT_ID="..."
@@ -199,6 +209,7 @@ The classic single-tenant variables (`MSGRAPH_CLIENT_ID` / `MSGRAPH_CLIENT_SECRE
 
 - `execute_tool` accepts an optional top-level `tenant` argument: `{"tool_name": "users_list", "parameters": {}, "tenant": "fabrikam"}`.
 - Without it, the **default tenant** is used — the profile named by `MSGRAPH_DEFAULT_TENANT`, else the one named `default`, else the first configured.
+- The configured roster — names, default marker, and descriptions — is embedded in the `execute_tool` schema at startup, so the AI knows which tenant fits without an extra lookup.
 - The `tenants` tool category manages profiles from the assistant: `tenants_list` shows what is configured (never the secrets), `tenants_get_current` shows the default, and `tenants_switch` changes the default for the session.
 
 ---
@@ -242,6 +253,7 @@ The classic single-tenant variables (`MSGRAPH_CLIENT_ID` / `MSGRAPH_CLIENT_SECRE
 | `MSGRAPH_TENANTS` | — | No (inline JSON list of tenants) |
 | `MSGRAPH_TENANTS_FILE` | — | No (path to a tenants JSON file) |
 | `MSGRAPH_TENANT_<NAME>_CLIENT_ID` / `_CLIENT_SECRET` / `_TENANT_ID` | — | No (per-tenant triples) |
+| `MSGRAPH_TENANT_<NAME>_DESCRIPTION` | — | No (tells the AI when to use that tenant) |
 | `MSGRAPH_DEFAULT_TENANT` | — | No (tenant profile used when a call names none) |
 | `MSGRAPH_MCP_PORT` | `MICROSOFT_MCP_PORT` | No (default: 3100) |
 | `MSGRAPH_MCP_TRANSPORT` | `MICROSOFT_MCP_TRANSPORT` | No (default: stdio) |
