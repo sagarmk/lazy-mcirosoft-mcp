@@ -131,10 +131,10 @@ Your AI assistant browses by category, picks the right tool, and executes it:
 You:    "Send an email to john@company.com about the meeting"
 
 AI:     → search_tools({query: "*", category: "mail"})
-        ← returns: mail_list_messages, mail_get_message, mail_send,
-                   mail_create_draft, mail_delete_message
+        ← returns: mail_list_messages, mail_get_message, mail_send_message,
+                   mail_reply_message, mail_forward_message, ...
 
-AI:     → execute_tool({tool_name: "mail_send", parameters: {
+AI:     → execute_tool({tool_name: "mail_send_message", parameters: {
             userId: "me",
             subject: "About the meeting",
             body: "...",
@@ -143,26 +143,63 @@ AI:     → execute_tool({tool_name: "mail_send", parameters: {
         ← email sent
 ```
 
-This keeps the MCP surface area small (just 2 tools) while giving access to all 53 Microsoft Graph operations — important when you have multiple MCP servers loaded.
+This keeps the MCP surface area small (just 2 tools) while giving access to all 56 operations — important when you have multiple MCP servers loaded.
 
 ---
 
 ## All Available Tools
 
-53 tools across 10 categories:
+56 tools across 11 categories:
 
 | Category | Tools | Operations |
 |----------|-------|-----------|
 | **users** | 5 | `users_list`, `users_get`, `users_create`, `users_update`, `users_delete` |
-| **mail** | 5 | `mail_list_messages`, `mail_get_message`, `mail_send`, `mail_create_draft`, `mail_delete_message` |
-| **calendar** | 6 | `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`, `calendar_find_available_times` |
+| **mail** | 8 | `mail_list_messages`, `mail_get_message`, `mail_send_message`, `mail_reply_message`, `mail_forward_message`, `mail_search_messages`, `mail_list_folders`, `mail_create_folder` |
+| **calendar** | 6 | `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`, `calendar_find_free_busy` |
 | **contacts** | 5 | `contacts_list`, `contacts_get`, `contacts_create`, `contacts_update`, `contacts_delete` |
-| **files** | 5 | `files_list_in_drive`, `files_get`, `files_upload`, `files_delete`, `files_search` |
-| **teams** | 5 | `teams_list`, `teams_get`, `teams_create`, `teams_list_members`, `teams_list_channels` |
-| **groups** | 5 | `groups_list`, `groups_get`, `groups_create`, `groups_add_member`, `groups_list_members` |
-| **planner** | 4 | `planner_list_tasks`, `planner_get_task`, `planner_create_task`, `planner_update_task` |
-| **sharepoint** | 3 | `sharepoint_list_sites`, `sharepoint_get_site`, `sharepoint_list_items` |
-| **onenote** | 2 | `onenote_list_notebooks`, `onenote_create_page` |
+| **files** | 6 | `files_list`, `files_get`, `files_upload`, `files_download`, `files_search`, `files_share` |
+| **teams** | 5 | `teams_list`, `teams_list_channels`, `teams_list_messages`, `teams_send_message`, `teams_get_message` |
+| **groups** | 5 | `groups_list`, `groups_get`, `groups_create`, `groups_list_members`, `groups_manage_members` |
+| **planner** | 5 | `planner_list_plans`, `planner_get_plan`, `planner_list_tasks`, `planner_create_task`, `planner_update_task` |
+| **sharepoint** | 4 | `sharepoint_list_sites`, `sharepoint_get_site`, `sharepoint_list_lists`, `sharepoint_get_list_items` |
+| **onenote** | 4 | `onenote_list_notebooks`, `onenote_list_sections`, `onenote_list_pages`, `onenote_get_page_content` |
+| **tenants** | 3 | `tenants_list`, `tenants_get_current`, `tenants_switch` |
+
+---
+
+## Multiple Entra ID Tenants
+
+The server can hold several Entra ID (Azure AD) app registrations at once and route each call to the right one. Configure tenants any of these ways (they can be combined; on a name clash the first source wins):
+
+**Inline JSON** — set `MSGRAPH_TENANTS` to an array (or an object map keyed by name):
+
+```json
+[
+  { "name": "contoso",  "clientId": "...", "clientSecret": "...", "tenantId": "..." },
+  { "name": "fabrikam", "clientId": "...", "clientSecret": "...", "tenantId": "..." }
+]
+```
+
+**JSON file** — set `MSGRAPH_TENANTS_FILE=/path/to/tenants.json` with the same shape.
+
+**Per-tenant environment variables** — one triple per tenant:
+
+```bash
+MSGRAPH_TENANT_CONTOSO_CLIENT_ID="..."
+MSGRAPH_TENANT_CONTOSO_CLIENT_SECRET="..."
+MSGRAPH_TENANT_CONTOSO_TENANT_ID="..."
+MSGRAPH_TENANT_FABRIKAM_CLIENT_ID="..."
+MSGRAPH_TENANT_FABRIKAM_CLIENT_SECRET="..."
+MSGRAPH_TENANT_FABRIKAM_TENANT_ID="..."
+```
+
+The classic single-tenant variables (`MSGRAPH_CLIENT_ID` / `MSGRAPH_CLIENT_SECRET` / `MSGRAPH_TENANT_ID`) still work and register a profile named `default`. Tenant names are case-insensitive.
+
+**Picking a tenant at execution time:**
+
+- `execute_tool` accepts an optional top-level `tenant` argument: `{"tool_name": "users_list", "parameters": {}, "tenant": "fabrikam"}`.
+- Without it, the **default tenant** is used — the profile named by `MSGRAPH_DEFAULT_TENANT`, else the one named `default`, else the first configured.
+- The `tenants` tool category manages profiles from the assistant: `tenants_list` shows what is configured (never the secrets), `tenants_get_current` shows the default, and `tenants_switch` changes the default for the session.
 
 ---
 
@@ -199,11 +236,17 @@ This keeps the MCP surface area small (just 2 tools) while giving access to all 
 
 | Variable | Fallback | Required |
 |----------|----------|----------|
-| `MSGRAPH_CLIENT_ID` | `MICROSOFT_MCP_CLIENT_ID` | Yes |
-| `MSGRAPH_CLIENT_SECRET` | `MICROSOFT_MCP_CLIENT_SECRET` | Yes |
-| `MSGRAPH_TENANT_ID` | `MICROSOFT_MCP_TENANT_ID` | Yes |
+| `MSGRAPH_CLIENT_ID` | `MICROSOFT_MCP_CLIENT_ID` | Yes* |
+| `MSGRAPH_CLIENT_SECRET` | `MICROSOFT_MCP_CLIENT_SECRET` | Yes* |
+| `MSGRAPH_TENANT_ID` | `MICROSOFT_MCP_TENANT_ID` | Yes* |
+| `MSGRAPH_TENANTS` | — | No (inline JSON list of tenants) |
+| `MSGRAPH_TENANTS_FILE` | — | No (path to a tenants JSON file) |
+| `MSGRAPH_TENANT_<NAME>_CLIENT_ID` / `_CLIENT_SECRET` / `_TENANT_ID` | — | No (per-tenant triples) |
+| `MSGRAPH_DEFAULT_TENANT` | — | No (tenant profile used when a call names none) |
 | `MSGRAPH_MCP_PORT` | `MICROSOFT_MCP_PORT` | No (default: 3100) |
 | `MSGRAPH_MCP_TRANSPORT` | `MICROSOFT_MCP_TRANSPORT` | No (default: stdio) |
+
+\* Required only when no tenants are configured through `MSGRAPH_TENANTS`, `MSGRAPH_TENANTS_FILE`, or `MSGRAPH_TENANT_<NAME>_*` variables. See [Multiple Entra ID Tenants](#multiple-entra-id-tenants).
 
 ---
 

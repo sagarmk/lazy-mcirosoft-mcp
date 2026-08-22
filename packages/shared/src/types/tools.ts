@@ -8,7 +8,8 @@ export type ToolCategory =
   | "sharepoint"
   | "planner"
   | "onenote"
-  | "groups";
+  | "groups"
+  | "tenants";
 
 export interface ToolParameter {
   name: string;
