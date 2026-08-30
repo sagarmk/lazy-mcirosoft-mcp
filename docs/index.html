@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lazy MS Graph MCP — Microsoft 365 for Claude, Cursor &amp; VS Code</title>
+<meta name="description" content="Access Microsoft 365 — mail, calendar, files, Teams, users and more — from Claude, Cursor, or VS Code through one tiny MCP server. Free macOS app, encrypted credentials, one-click install.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lazy MS Graph MCP">
+<meta property="og:description" content="Talk to Microsoft 365 from Claude, Cursor, or VS Code. 56 Graph tools behind 2 MCP tools. Free macOS app.">
+<meta property="og:image" content="https://sagarmk.github.io/lazy-mcirosoft-mcp/assets/screenshot.png">
+<meta property="og:url" content="https://sagarmk.github.io/lazy-mcirosoft-mcp/">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --bg-2: #10141c;
+    --surface: #151a24;
+    --surface-2: #1b2130;
+    --border: #252d3c;
+    --border-strong: #33405a;
+    --text: #e8ecf3;
+    --muted: #9aa4b6;
+    --faint: #6b7587;
+    --accent: #3b9cff;
+    --accent-2: #00bcf2;
+    --accent-soft: rgba(59, 156, 255, 0.14);
+    --green: #3fb950;
+    --amber: #d9a23a;
+    --red: #e5484d;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --max: 1120px;
+    --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--font); font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre, kbd { font-family: var(--mono); }
+  code { font-size: 0.9em; background: var(--surface-2); border: 1px solid var(--border); padding: 0.1em 0.4em; border-radius: 6px; color: #cfe3ff; }
+  img { max-width: 100%; height: auto; display: block; }
+  h1, h2, h3, h4 { margin: 0; line-height: 1.2; letter-spacing: -0.015em; }
+  h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+  h3 { font-size: 1.1rem; }
+  p { margin: 0; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+  section { padding: 96px 0; }
+  section + section { border-top: 1px solid var(--border); }
+  .eyebrow { display: inline-block; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .lead { color: var(--muted); font-size: 1.1rem; max-width: 640px; margin-top: 14px; }
+  .sec-head { margin-bottom: 44px; }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(11, 14, 20, 0.78); backdrop-filter: saturate(160%) blur(12px);
+    border-bottom: 1px solid transparent; transition: border-color .2s;
+  }
+  .nav.scrolled { border-bottom-color: var(--border); }
+  .nav .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 1.02rem; }
+  .brand:hover { text-decoration: none; }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; }
+  .nav-links { display: flex; gap: 22px; margin-left: 8px; }
+  .nav-links a { color: var(--muted); font-size: 0.93rem; font-weight: 500; }
+  .nav-links a:hover { color: var(--text); text-decoration: none; }
+  .nav-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px;
+    font-weight: 600; font-size: 0.95rem; border: 1px solid var(--border-strong); color: var(--text);
+    background: var(--surface); transition: transform .12s, background .15s, border-color .15s; white-space: nowrap;
+  }
+  .btn:hover { text-decoration: none; background: var(--surface-2); border-color: #46557a; transform: translateY(-1px); }
+  .btn.primary { background: linear-gradient(135deg, #2f8ff5, #0fb8ea); border-color: transparent; color: #fff; box-shadow: 0 6px 24px rgba(31, 140, 255, 0.35); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.sm { padding: 8px 14px; font-size: 0.88rem; }
+  .btn svg { width: 18px; height: 18px; }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 88px 0 72px; position: relative; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: -40% -20% auto -20%; height: 700px; pointer-events: none;
+    background: radial-gradient(600px 360px at 30% 40%, rgba(59,156,255,0.16), transparent 70%),
+                radial-gradient(500px 320px at 75% 30%, rgba(0,188,242,0.12), transparent 70%);
+  }
+  .hero .wrap { position: relative; display: grid; grid-template-columns: 1fr 1.05fr; gap: 56px; align-items: center; }
+  .hero h1 { font-size: clamp(2.2rem, 4.6vw, 3.3rem); font-weight: 800; letter-spacing: -0.03em; }
+  .hero h1 .grad { background: linear-gradient(90deg, #62b4ff, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .lead { font-size: 1.18rem; max-width: 560px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 22px; color: var(--faint); font-size: 0.88rem; }
+  .meta span::before { content: "✓"; color: var(--green); margin-right: 6px; font-weight: 700; }
+  .hero-shot { position: relative; }
+  .hero-shot::after {
+    content: ""; position: absolute; inset: 10% -6% -8% -6%; z-index: -1; filter: blur(40px);
+    background: radial-gradient(closest-side, rgba(59,156,255,0.28), transparent);
+  }
+
+  /* ---------- window frame ---------- */
+  .frame { border: 1px solid var(--border-strong); border-radius: 12px; overflow: hidden; background: #0e1117; box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02) inset; }
+  .frame-bar { display: flex; align-items: center; gap: 6px; padding: 10px 12px; background: #161b25; border-bottom: 1px solid var(--border); }
+  .frame-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a4356; }
+  .frame-bar i:nth-child(1) { background: #ff5f57; } .frame-bar i:nth-child(2) { background: #febc2e; } .frame-bar i:nth-child(3) { background: #28c840; }
+  .frame-bar span { margin-left: 10px; color: var(--faint); font-size: 0.78rem; font-family: var(--mono); }
+  .caption { color: var(--muted); font-size: 0.93rem; margin-top: 14px; }
+
+  /* ---------- steps ---------- */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .step { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 26px 26px; }
+  .step .num { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); font-weight: 800; font-family: var(--mono); margin-bottom: 18px; border: 1px solid rgba(59,156,255,0.25); }
+  .step h3 { margin-bottom: 8px; font-size: 1.15rem; }
+  .step p { color: var(--muted); font-size: 0.97rem; }
+  .step .tag { display: inline-block; margin-top: 14px; font-size: 0.78rem; color: var(--faint); font-family: var(--mono); }
+  .no-terminal { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+  .pill b { color: var(--text); font-weight: 600; }
+  .pill .x { color: var(--red); font-weight: 700; }
+  .pill .ok { color: var(--green); font-weight: 700; }
+
+  /* ---------- feature grid ---------- */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 56px; }
+  .feature { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+  .feature .ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--border); margin-bottom: 14px; color: var(--accent-2); }
+  .feature .ic svg { width: 20px; height: 20px; }
+  .feature h3 { font-size: 1rem; margin-bottom: 6px; }
+  .feature p { color: var(--muted); font-size: 0.93rem; }
+
+  /* ---------- screenshots ---------- */
+  .shots { display: grid; grid-template-columns: 1fr; gap: 56px; }
+  .shot { display: grid; grid-template-columns: 1fr 1.6fr; gap: 36px; align-items: center; }
+  .shot:nth-child(even) .shot-text { order: 2; }
+  .shot h3 { font-size: 1.35rem; margin-bottom: 10px; }
+  .shot p { color: var(--muted); }
+  .shot ul { margin: 14px 0 0; padding-left: 0; list-style: none; color: var(--muted); font-size: 0.95rem; }
+  .shot li { padding-left: 22px; position: relative; margin: 6px 0; }
+  .shot li::before { content: ""; position: absolute; left: 0; top: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+  /* ---------- use cases ---------- */
+  .cases { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .case { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; transition: border-color .15s, transform .15s; }
+  .case:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .case .who { font-size: 0.72rem; color: var(--faint); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+  .case .prompt { font-size: 1.05rem; font-weight: 600; line-height: 1.4; }
+  .case .prompt::before { content: "“"; color: var(--accent); } .case .prompt::after { content: "”"; color: var(--accent); }
+  .case .chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { font-family: var(--mono); font-size: 0.76rem; padding: 3px 8px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: #bcd7ff; white-space: nowrap; }
+  .chip.t { color: #c9b5ff; }
+  .chain .arr { color: var(--faint); font-size: 0.8rem; }
+  .case .why { color: var(--muted); font-size: 0.9rem; }
+
+  /* ---------- how it works ---------- */
+  .how { display: grid; grid-template-columns: 1fr 1.15fr; gap: 44px; align-items: start; }
+  .flow { display: flex; flex-direction: column; gap: 0; margin: 26px 0 0; }
+  .node { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .node .k { font-family: var(--mono); font-size: 0.8rem; color: var(--accent-2); min-width: 118px; }
+  .node .v { color: var(--muted); font-size: 0.93rem; }
+  .node .v b { color: var(--text); }
+  .down { width: 2px; height: 22px; background: linear-gradient(var(--border-strong), var(--accent)); margin-left: 28px; }
+  .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; }
+  .why { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .why .big { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text); font-family: var(--mono); }
+  .why p { color: var(--muted); font-size: 0.93rem; margin-top: 6px; }
+
+  /* ---------- code blocks ---------- */
+  .how > *, .install > *, .tenants > *, .shot > *, .hero .wrap > * { min-width: 0; }
+  .code { min-width: 0; position: relative; background: #0a0d13; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .code-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #11151d; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 0.78rem; color: var(--faint); }
+  .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-size: 0.86rem; line-height: 1.6; color: #d6dee9; }
+  .code .c { color: #6b7587; } .code .k { color: #7cc4ff; } .code .s { color: #a5d6a7; } .code .y { color: #ffd479; } .code .u { color: #c9b5ff; } .code .g { color: var(--green); }
+  .copy { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 3px 10px; font-size: 0.75rem; cursor: pointer; font-family: var(--font); }
+  .copy:hover { color: var(--text); border-color: var(--border-strong); }
+  .copy.done { color: var(--green); border-color: var(--green); }
+
+  /* ---------- tenants ---------- */
+  .tenants { display: grid; grid-template-columns: 1fr 1.25fr; gap: 44px; align-items: center; }
+  .tenants .code { margin-top: 22px; }
+
+  /* ---------- tools catalog ---------- */
+  .cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .cat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 18px 16px; }
+  .cat-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .cat-head h3 { font-family: var(--mono); font-size: 0.98rem; color: #cfe3ff; }
+  .cat-head .n { font-size: 0.78rem; color: var(--faint); font-family: var(--mono); }
+  .cat p { color: var(--muted); font-size: 0.88rem; margin-bottom: 12px; min-height: 2.6em; }
+  .cat .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .cat .chip { font-size: 0.72rem; padding: 2px 7px; }
+  .note { margin-top: 22px; color: var(--muted); font-size: 0.92rem; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+  .tab { background: transparent; border: 0; color: var(--muted); font-family: var(--font); font-weight: 600; font-size: 0.93rem; padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+  .panel { display: none; } .panel.active { display: block; }
+  .panel .path { color: var(--faint); font-size: 0.85rem; margin-bottom: 10px; }
+  .install { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .install h3 { font-size: 1.15rem; margin-bottom: 10px; }
+  .install .code + .code { margin-top: 14px; }
+
+  /* ---------- azure ---------- */
+  .azure { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .az { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+  .az h3 { font-size: 1rem; margin-bottom: 8px; }
+  .az ol { margin: 0; padding-left: 20px; color: var(--muted); font-size: 0.93rem; }
+  .az li { margin: 4px 0; }
+  .callout { margin-top: 20px; display: flex; gap: 14px; align-items: flex-start; background: rgba(217,162,58,0.08); border: 1px solid rgba(217,162,58,0.35); border-radius: 12px; padding: 16px 18px; color: #e9d9b5; font-size: 0.95rem; }
+  .callout b { color: #ffd479; }
+  .callout svg { width: 22px; height: 22px; flex: none; color: var(--amber); margin-top: 2px; }
+  .perms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+  /* ---------- footer ---------- */
+  footer { border-top: 1px solid var(--border); padding: 40px 0 48px; color: var(--faint); font-size: 0.9rem; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  footer a { color: var(--muted); } footer a:hover { color: var(--text); }
+  footer .links { display: flex; gap: 18px; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 980px) {
+    .hero .wrap { grid-template-columns: 1fr; gap: 40px; }
+    .steps, .features, .cats, .why-grid, .azure { grid-template-columns: repeat(2, 1fr); }
+    .how, .tenants, .install { grid-template-columns: 1fr; }
+    .shot { grid-template-columns: 1fr; gap: 20px; }
+    .shot:nth-child(even) .shot-text { order: 0; }
+  }
+  @media (max-width: 760px) {
+    .nav-links { display: none; }
+    .nav .wrap { gap: 12px; }
+    .nav-right .btn.ghost { display: none; }
+    section { padding: 64px 0; }
+    .hero { padding: 48px 0 56px; }
+    .steps, .features, .cases, .cats, .why-grid, .azure { grid-template-columns: 1fr; }
+    .cta .btn { width: 100%; justify-content: center; }
+    .node .k { min-width: 96px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/logo.svg" alt=""> Lazy MS Graph MCP</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#easy">Get started</a>
+      <a href="#screens">Screenshots</a>
+      <a href="#use-cases">Use cases</a>
+      <a href="#how">How it works</a>
+      <a href="#tools">Tools</a>
+      <a href="#install">Install</a>
+    </nav>
+    <div class="nav-right">
+      <a class="btn sm ghost" href="https://github.com/sagarmk/lazy-mcirosoft-mcp" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn sm primary" href="https://github.com/sagarmk/lazy-mcirosoft-mcp/releases/latest" target="_blank" rel="noopener">Download</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow">Free &amp; open source · MIT</span>
+        <h1>Talk to <span style="white-space:nowrap">Microsoft 365</span><br>from <span class="grad">Claude, Cursor &amp; VS Code</span></h1>
+        <p class="lead">Mail, calendar, files, Teams, users, SharePoint, Planner, OneNote — through one tiny MCP server. Download the macOS app, paste your Azure credentials, click <b>Start</b>. Your AI does the rest.</p>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/sagarmk/lazy-mcirosoft-mcp/releases/latest" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download for macOS <span id="ver">v1.3.0</span>
+          </a>
+          <a class="btn" href="#install">Use with npm instead</a>
+        </div>
+        <div class="meta">
+          <span>Apple Silicon · signed &amp; notarized</span>
+          <span>No terminal needed</span>
+          <span>Credentials stored encrypted</span>
+        </div>
+      </div>
+      <div class="hero-shot">
+        <div class="frame">
+          <div class="frame-bar"><i></i><i></i><i></i><span>Lazy MS Graph MCP — Overview</span></div>
+          <img src="assets/screenshot.png" alt="The Lazy MS Graph MCP macOS app showing the server running, 2 tenants configured, and live logs" width="2360" height="1600" fetchpriority="high">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3 STEPS ================= -->
+  <section id="easy">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">How easy is it?</span>
+        <h2>Up and running in three clicks</h2>
+        <p class="lead">No config files to hand-edit, no build step, no terminal. The app validates your credentials, starts the server, and writes the MCP config for your editor.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <h3>Download &amp; open the app</h3>
+          <p>Grab the DMG, drag it to Applications. It lives in your menu bar, auto-starts with macOS if you want, and keeps running in the tray.</p>
+          <span class="tag">~30 seconds</span>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <h3>Paste your Azure credentials</h3>
+          <p>Client ID, secret, tenant ID. The built-in <b>Guide</b> walks you through the Azure portal, tells you exactly which permission each tool needs, and validates the credentials before the server starts.</p>
+          <span class="tag">~2 minutes, once</span>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <h3>Click “Install for Claude Code”</h3>
+          <p>Or Cursor, or copy the VS Code snippet. The <b>Connect</b> page writes the MCP entry for you — including the full tenant roster if you have more than one. Then just ask your AI.</p>
+          <span class="tag">1 click</span>
+        </div>
+      </div>
+      <div class="no-terminal">
+        <span class="pill"><span class="x">✕</span> <b>npm install</b></span>
+        <span class="pill"><span class="x">✕</span> <b>editing JSON by hand</b></span>
+        <span class="pill"><span class="x">✕</span> <b>secrets in plain-text env files</b></span>
+        <span class="pill"><span class="ok">✓</span> <b>Start</b> · <b>Install</b> · done</span>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+          <h3>One-click server</h3>
+          <p>Start/Stop lives in the header with a status pill and uptime, visible from every page. Live, clearable logs on the Overview.</p>
+        </div>
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+          <h3>Multiple Entra ID tenants</h3>
+          <p>Add several app registrations. Give each a description — “use for the Client X project” — and the AI picks the right tenant on its own.</p>
+        </div>
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <h3>Encrypted credentials</h3>
+          <p>Secrets are stored with Electron <code>safeStorage</code>, backed by the macOS Keychain. They never sit in a plain-text file.</p>
+        </div>
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg></div>
+          <h3>Auto-install for your editor</h3>
+          <p>One button for Claude Code, one for Cursor, a copy-ready snippet for VS Code. Multi-tenant configs included.</p>
+        </div>
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <h3>Searchable tool catalog</h3>
+          <p>The Tools page renders the real catalog from the bundled server. Search by name, category, or description.</p>
+        </div>
+        <div class="feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <h3>Built-in Azure AD guide</h3>
+          <p>Step-by-step app registration with a per-tool permission map, so you grant exactly what you need and nothing more.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCREENSHOTS ================= -->
+  <section id="screens">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Screenshots</span>
+        <h2>A small app that stays out of your way</h2>
+        <p class="lead">Sidebar layout: Overview, Tenants, Connect, Tools — plus Guide and Settings. Everything you need, nothing you don't.</p>
+      </div>
+      <div class="shots">
+        <div class="shot">
+          <div class="shot-text">
+            <h3>Overview</h3>
+            <p>Transport, port, and tool count at a glance. Tenant chips show which profile is the default and which use delegated auth. Logs stream live from the server process.</p>
+            <ul>
+              <li>Status pill with uptime, Start / Stop always in reach</li>
+              <li>Tenant chips link straight to the Tenants page</li>
+              <li>“Apply &amp; Restart” banner when config changes while running</li>
+            </ul>
+          </div>
+          <div class="frame">
+            <div class="frame-bar"><i></i><i></i><i></i><span>Overview</span></div>
+            <img src="assets/screenshot.png" alt="Overview page with stat cards for transport, port and tool count, tenant chips, and live logs" loading="lazy" width="2360" height="1600">
+          </div>
+        </div>
+        <div class="shot">
+          <div class="shot-text">
+            <h3>Tenants</h3>
+            <p>Each profile is one Azure AD app registration. The description you write here is surfaced to the AI through <code>tenants_list</code> and baked into the <code>execute_tool</code> schema — so “check the Client X SharePoint” routes to the right tenant without you saying which.</p>
+            <ul>
+              <li>Add, edit, delete; set the default; two-step delete confirm</li>
+              <li>App-only or delegated auth per tenant</li>
+              <li>Secrets are masked — the AI never sees them</li>
+            </ul>
+          </div>
+          <div class="frame">
+            <div class="frame-bar"><i></i><i></i><i></i><span>Tenants</span></div>
+            <img src="assets/screenshot-tenants.png" alt="Tenants page listing two Entra ID tenant profiles, corp (default, app-only) and clientx (delegated), each with an AI-facing description" loading="lazy" width="2360" height="1600">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= USE CASES ================= -->
+  <section id="use-cases">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Use cases</span>
+        <h2>Things you can just ask</h2>
+        <p class="lead">You type a sentence. Your assistant finds the right Graph tool, fills in the parameters, and runs it. A few examples and the tools they chain together.</p>
+      </div>
+      <div class="cases">
+        <div class="case">
+          <span class="who">Inbox triage</span>
+          <p class="prompt">Summarise every unread email from this week that mentions the budget.</p>
+          <div class="chain"><span class="chip">mail_search_messages</span><span class="arr">→</span><span class="chip">mail_get_message</span></div>
+          <p class="why">Searches subject, body and metadata; pulls full bodies only for the hits.</p>
+        </div>
+        <div class="case">
+          <span class="who">Scheduling</span>
+          <p class="prompt">Find a 30-minute slot with Priya and Tom on Thursday and book it.</p>
+          <div class="chain"><span class="chip">calendar_find_free_busy</span><span class="arr">→</span><span class="chip">calendar_create_event</span></div>
+          <p class="why">Free/busy across several users, then a real invite with attendees.</p>
+        </div>
+        <div class="case">
+          <span class="who">Sharing</span>
+          <p class="prompt">Share the Q3 deck from my OneDrive with the #sales channel in Teams.</p>
+          <div class="chain"><span class="chip">files_search</span><span class="arr">→</span><span class="chip">files_share</span><span class="arr">→</span><span class="chip">teams_send_message</span></div>
+          <p class="why">Finds the file, creates a sharing link, posts it to the channel.</p>
+        </div>
+        <div class="case">
+          <span class="who">Directory admin</span>
+          <p class="prompt">Who's in the Finance group? Add Sam Lee and remove anyone who left.</p>
+          <div class="chain"><span class="chip">groups_list</span><span class="arr">→</span><span class="chip">groups_list_members</span><span class="arr">→</span><span class="chip">groups_manage_members</span></div>
+          <p class="why">Membership changes with the same tools your IT team would script.</p>
+        </div>
+        <div class="case">
+          <span class="who">Onboarding</span>
+          <p class="prompt">Create an account for our new hire and add them to Engineering and All-Staff.</p>
+          <div class="chain"><span class="chip">users_create</span><span class="arr">→</span><span class="chip">groups_manage_members</span></div>
+          <p class="why">Requires <code>User.ReadWrite.All</code> — the app's guide tells you before you try.</p>
+        </div>
+        <div class="case">
+          <span class="who">Project tracking</span>
+          <p class="prompt">Add a “Ship release notes” task to the Launch plan, due Friday, assigned to me.</p>
+          <div class="chain"><span class="chip">planner_list_plans</span><span class="arr">→</span><span class="chip">planner_create_task</span></div>
+          <p class="why">Etag-aware updates so concurrent edits don't clobber each other.</p>
+        </div>
+        <div class="case">
+          <span class="who">Notes</span>
+          <p class="prompt">Pull the action items from last week's retro page in OneNote.</p>
+          <div class="chain"><span class="chip">onenote_list_notebooks</span><span class="arr">→</span><span class="chip">onenote_list_pages</span><span class="arr">→</span><span class="chip">onenote_get_page_content</span></div>
+          <p class="why">Returns the page HTML; the AI extracts the list.</p>
+        </div>
+        <div class="case">
+          <span class="who">Multi-tenant</span>
+          <p class="prompt">List the open items in the Client X “Deliverables” SharePoint list.</p>
+          <div class="chain"><span class="chip t">tenant: clientx</span><span class="arr">→</span><span class="chip">sharepoint_list_lists</span><span class="arr">→</span><span class="chip">sharepoint_get_list_items</span></div>
+          <p class="why">The tenant description says “use for anything about Client X” — the AI routes there automatically.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">How it works</span>
+        <h2>Two MCP tools. Fifty-six operations.</h2>
+        <p class="lead">Most Graph MCP servers dump dozens of tools into your assistant's context. Lazy MS Graph exposes just <code>search_tools</code> and <code>execute_tool</code>, and lets the AI discover the rest by category.</p>
+      </div>
+      <div class="how">
+        <div>
+          <div class="flow">
+            <div class="node"><span class="k">you</span><span class="v"><b>“Send an email to John about the meeting”</b></span></div>
+            <div class="down"></div>
+            <div class="node"><span class="k">search_tools</span><span class="v">category: <b>mail</b> → 8 tools with their Zod-typed parameters</span></div>
+            <div class="down"></div>
+            <div class="node"><span class="k">execute_tool</span><span class="v"><b>mail_send_message</b> with subject, body, recipients (+ optional <b>tenant</b>)</span></div>
+            <div class="down"></div>
+            <div class="node"><span class="k">Microsoft Graph</span><span class="v">OAuth 2.0 client-credentials via MSAL, token refresh handled for you</span></div>
+          </div>
+        </div>
+        <div class="code">
+          <div class="code-bar"><span>what the AI actually does</span><button class="copy" data-copy="how-ex">Copy</button></div>
+<pre id="how-ex"><span class="c">You:</span>  Send an email to john@company.com about the meeting
+
+<span class="c">AI:</span>   → <span class="k">search_tools</span>({ query: <span class="s">"*"</span>, category: <span class="s">"mail"</span> })
+      ← mail_list_messages, mail_get_message,
+        <span class="y">mail_send_message</span>, mail_reply_message,
+        mail_forward_message, mail_search_messages,
+        mail_list_folders, mail_create_folder
+
+<span class="c">AI:</span>   → <span class="k">execute_tool</span>({
+          tool_name:  <span class="s">"mail_send_message"</span>,
+          parameters: {
+            userId:       <span class="s">"me"</span>,
+            subject:      <span class="s">"About the meeting"</span>,
+            body:         <span class="s">"…"</span>,
+            toRecipients: [<span class="s">"john@company.com"</span>]
+          }
+        })
+      ← <span class="g">✓ sent</span></pre>
+        </div>
+      </div>
+      <div class="why-grid">
+        <div class="why"><div class="big">2</div><p>tools in your MCP context — no matter how many other servers you have loaded. Your assistant stays sharp.</p></div>
+        <div class="why"><div class="big">11</div><p>categories with category-first routing, so the AI narrows to the right family of tools before it picks one.</p></div>
+        <div class="why"><div class="big">stdio · SSE</div><p>Run over stdio for editors, or as an HTTP server with <code>/sse</code>, <code>/messages</code> and <code>/health</code> endpoints.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MULTI-TENANT ================= -->
+  <section id="tenants">
+    <div class="wrap">
+      <div class="tenants">
+        <div>
+          <span class="eyebrow">Multiple tenants</span>
+          <h2>Consultants, agencies, MSPs: one server, every client</h2>
+          <p class="lead" style="margin-top:12px">Hold several Entra ID app registrations at once. Each carries a description — <em>“when should the AI use this tenant?”</em> — that is baked into the <code>execute_tool</code> schema at startup. The assistant routes on it without an extra lookup.</p>
+          <ul style="list-style:none;padding:0;margin:18px 0 0;color:var(--muted);font-size:.95rem;display:grid;gap:8px">
+            <li>· Pass <code>tenant: "fabrikam"</code> on any call, or let the default apply</li>
+            <li>· <code>tenants_list</code>, <code>tenants_get_current</code>, <code>tenants_switch</code> from the assistant</li>
+            <li>· Configure in the app, via <code>MSGRAPH_TENANTS</code> JSON, a file, or per-tenant env vars</li>
+            <li>· Legacy single-tenant vars still work as the <code>default</code> profile</li>
+          </ul>
+          <div class="code">
+            <div class="code-bar"><span>MSGRAPH_TENANTS</span><button class="copy" data-copy="ten-ex">Copy</button></div>
+<pre id="ten-ex">[
+  { <span class="k">"name"</span>: <span class="s">"contoso"</span>,  <span class="k">"clientId"</span>: <span class="s">"…"</span>, <span class="k">"clientSecret"</span>: <span class="s">"…"</span>, <span class="k">"tenantId"</span>: <span class="s">"…"</span>,
+    <span class="k">"description"</span>: <span class="s">"Main company tenant — use unless another is named."</span> },
+  { <span class="k">"name"</span>: <span class="s">"fabrikam"</span>, <span class="k">"clientId"</span>: <span class="s">"…"</span>, <span class="k">"clientSecret"</span>: <span class="s">"…"</span>, <span class="k">"tenantId"</span>: <span class="s">"…"</span>,
+    <span class="k">"description"</span>: <span class="s">"Fabrikam engagement — anything about the Fabrikam project."</span> }
+]</pre>
+          </div>
+        </div>
+        <div class="frame">
+          <div class="frame-bar"><i></i><i></i><i></i><span>Tenants</span></div>
+          <img src="assets/screenshot-tenants.png" alt="Tenants page in the app" loading="lazy" width="2360" height="1600">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOOL CATALOG ================= -->
+  <section id="tools">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Tool catalog</span>
+        <h2>56 tools across 11 categories</h2>
+        <p class="lead">Everything the server registers, straight from the source. Each tool has typed, validated parameters and a description the AI uses to choose it.</p>
+      </div>
+      <div class="cats">
+        <div class="cat"><div class="cat-head"><h3>mail</h3><span class="n">8 tools</span></div><p>Read, search, send, reply, forward; manage folders.</p><div class="chips"><span class="chip">mail_list_messages</span><span class="chip">mail_get_message</span><span class="chip">mail_send_message</span><span class="chip">mail_reply_message</span><span class="chip">mail_forward_message</span><span class="chip">mail_search_messages</span><span class="chip">mail_list_folders</span><span class="chip">mail_create_folder</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>calendar</h3><span class="n">6 tools</span></div><p>Events in a date range, CRUD, and free/busy across users.</p><div class="chips"><span class="chip">calendar_list_events</span><span class="chip">calendar_get_event</span><span class="chip">calendar_create_event</span><span class="chip">calendar_update_event</span><span class="chip">calendar_delete_event</span><span class="chip">calendar_find_free_busy</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>files</h3><span class="n">6 tools</span></div><p>OneDrive: browse, search content, upload, download links, share.</p><div class="chips"><span class="chip">files_list</span><span class="chip">files_get</span><span class="chip">files_upload</span><span class="chip">files_download</span><span class="chip">files_search</span><span class="chip">files_share</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>users</h3><span class="n">5 tools</span></div><p>Directory users with OData filtering, select, search, paging.</p><div class="chips"><span class="chip">users_list</span><span class="chip">users_get</span><span class="chip">users_create</span><span class="chip">users_update</span><span class="chip">users_delete</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>teams</h3><span class="n">5 tools</span></div><p>Teams, channels, and channel messages — read and post.</p><div class="chips"><span class="chip">teams_list</span><span class="chip">teams_list_channels</span><span class="chip">teams_list_messages</span><span class="chip">teams_send_message</span><span class="chip">teams_get_message</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>groups</h3><span class="n">5 tools</span></div><p>Microsoft 365 &amp; security groups and their membership.</p><div class="chips"><span class="chip">groups_list</span><span class="chip">groups_get</span><span class="chip">groups_create</span><span class="chip">groups_list_members</span><span class="chip">groups_manage_members</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>contacts</h3><span class="n">5 tools</span></div><p>Personal contacts for a user, full CRUD.</p><div class="chips"><span class="chip">contacts_list</span><span class="chip">contacts_get</span><span class="chip">contacts_create</span><span class="chip">contacts_update</span><span class="chip">contacts_delete</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>planner</h3><span class="n">5 tools</span></div><p>Plans for a group, tasks with etag-safe updates.</p><div class="chips"><span class="chip">planner_list_plans</span><span class="chip">planner_get_plan</span><span class="chip">planner_list_tasks</span><span class="chip">planner_create_task</span><span class="chip">planner_update_task</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>sharepoint</h3><span class="n">4 tools</span></div><p>Sites, lists, and list items with expanded field values.</p><div class="chips"><span class="chip">sharepoint_list_sites</span><span class="chip">sharepoint_get_site</span><span class="chip">sharepoint_list_lists</span><span class="chip">sharepoint_get_list_items</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>onenote</h3><span class="n">4 tools</span></div><p>Notebooks → sections → pages → page HTML.</p><div class="chips"><span class="chip">onenote_list_notebooks</span><span class="chip">onenote_list_sections</span><span class="chip">onenote_list_pages</span><span class="chip">onenote_get_page_content</span></div></div>
+        <div class="cat"><div class="cat-head"><h3>tenants</h3><span class="n">3 tools</span></div><p>Inspect and switch Entra ID profiles from the assistant.</p><div class="chips"><span class="chip t">tenants_list</span><span class="chip t">tenants_get_current</span><span class="chip t">tenants_switch</span></div></div>
+      </div>
+      <p class="note">The macOS app bundles a slightly larger build — <b>63 tools across 13 categories</b> — adding a <code>chats</code> category (1:1 and group Teams chats) and an <code>advanced</code> category with a raw <code>graph_request</code> escape hatch for any Graph endpoint.</p>
+    </div>
+  </section>
+
+  <!-- ================= INSTALL (npm) ================= -->
+  <section id="install">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Prefer the command line?</span>
+        <h2>Run the server yourself</h2>
+        <p class="lead">The app is the easy path, but the server is plain Node.js. Clone, build, point your editor at <code>dist/index.js</code>.</p>
+      </div>
+      <div class="install">
+        <div>
+          <h3>1 · Clone and build</h3>
+          <div class="code">
+            <div class="code-bar"><span>bash</span><button class="copy" data-copy="build">Copy</button></div>
+<pre id="build">git clone https://github.com/sagarmk/lazy-mcirosoft-mcp.git
+cd lazy-mcirosoft-mcp
+npm install
+npm run build</pre>
+          </div>
+          <h3 style="margin-top:26px">2 · Run it</h3>
+          <div class="code">
+            <div class="code-bar"><span>bash</span><button class="copy" data-copy="run">Copy</button></div>
+<pre id="run">MSGRAPH_CLIENT_ID=<span class="s">"your-client-id"</span> \
+MSGRAPH_CLIENT_SECRET=<span class="s">"your-client-secret"</span> \
+MSGRAPH_TENANT_ID=<span class="s">"your-tenant-id"</span> \
+npm start</pre>
+          </div>
+          <p class="caption">Optional: <code>MSGRAPH_MCP_TRANSPORT=sse</code> and <code>MSGRAPH_MCP_PORT=3100</code> for HTTP mode. <code>node dist/index.js --print-tools</code> dumps the catalog as JSON with no credentials.</p>
+        </div>
+        <div>
+          <h3>3 · Add to your editor</h3>
+          <div class="tabs" role="tablist">
+            <button class="tab active" role="tab" data-tab="claude-code">Claude Code</button>
+            <button class="tab" role="tab" data-tab="claude-desktop">Claude Desktop</button>
+            <button class="tab" role="tab" data-tab="cursor">Cursor</button>
+            <button class="tab" role="tab" data-tab="vscode">VS Code</button>
+          </div>
+          <div class="panel active" id="tab-claude-code">
+            <p class="path">One command from any terminal:</p>
+            <div class="code">
+              <div class="code-bar"><span>bash</span><button class="copy" data-copy="cc">Copy</button></div>
+<pre id="cc">claude mcp add lazy-ms-graph \
+  -e MSGRAPH_CLIENT_ID=<span class="s">your-client-id</span> \
+  -e MSGRAPH_CLIENT_SECRET=<span class="s">your-client-secret</span> \
+  -e MSGRAPH_TENANT_ID=<span class="s">your-tenant-id</span> \
+  -- node /path/to/lazy-mcirosoft-mcp/packages/server/dist/index.js</pre>
+            </div>
+          </div>
+          <div class="panel" id="tab-claude-desktop">
+            <p class="path"><code>~/Library/Application Support/Claude/claude_desktop_config.json</code></p>
+            <div class="code">
+              <div class="code-bar"><span>json</span><button class="copy" data-copy="cd">Copy</button></div>
+<pre id="cd">{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"lazy-ms-graph"</span>: {
+      <span class="k">"command"</span>: <span class="s">"node"</span>,
+      <span class="k">"args"</span>: [<span class="s">"/path/to/lazy-mcirosoft-mcp/packages/server/dist/index.js"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"MSGRAPH_CLIENT_ID"</span>: <span class="s">"your-client-id"</span>,
+        <span class="k">"MSGRAPH_CLIENT_SECRET"</span>: <span class="s">"your-client-secret"</span>,
+        <span class="k">"MSGRAPH_TENANT_ID"</span>: <span class="s">"your-tenant-id"</span>
+      }
+    }
+  }
+}</pre>
+            </div>
+          </div>
+          <div class="panel" id="tab-cursor">
+            <p class="path"><code>~/.cursor/mcp.json</code></p>
+            <div class="code">
+              <div class="code-bar"><span>json</span><button class="copy" data-copy="cu">Copy</button></div>
+<pre id="cu">{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"lazy-ms-graph"</span>: {
+      <span class="k">"command"</span>: <span class="s">"node"</span>,
+      <span class="k">"args"</span>: [<span class="s">"/path/to/lazy-mcirosoft-mcp/packages/server/dist/index.js"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"MSGRAPH_CLIENT_ID"</span>: <span class="s">"your-client-id"</span>,
+        <span class="k">"MSGRAPH_CLIENT_SECRET"</span>: <span class="s">"your-client-secret"</span>,
+        <span class="k">"MSGRAPH_TENANT_ID"</span>: <span class="s">"your-tenant-id"</span>
+      }
+    }
+  }
+}</pre>
+            </div>
+          </div>
+          <div class="panel" id="tab-vscode">
+            <p class="path"><code>.vscode/mcp.json</code> (project) or your user settings JSON</p>
+            <div class="code">
+              <div class="code-bar"><span>json</span><button class="copy" data-copy="vs">Copy</button></div>
+<pre id="vs">{
+  <span class="k">"servers"</span>: {
+    <span class="k">"lazy-ms-graph"</span>: {
+      <span class="k">"type"</span>: <span class="s">"stdio"</span>,
+      <span class="k">"command"</span>: <span class="s">"node"</span>,
+      <span class="k">"args"</span>: [<span class="s">"/path/to/lazy-mcirosoft-mcp/packages/server/dist/index.js"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"MSGRAPH_CLIENT_ID"</span>: <span class="s">"your-client-id"</span>,
+        <span class="k">"MSGRAPH_CLIENT_SECRET"</span>: <span class="s">"your-client-secret"</span>,
+        <span class="k">"MSGRAPH_TENANT_ID"</span>: <span class="s">"your-tenant-id"</span>
+      }
+    }
+  }
+}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= AZURE ================= -->
+  <section id="azure">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Azure AD setup</span>
+        <h2>One app registration, five minutes</h2>
+        <p class="lead">You do this once in the Azure portal. The app's built-in Guide shows the same steps with a per-tool permission map.</p>
+      </div>
+      <div class="azure">
+        <div class="az">
+          <h3>1 · Register an app</h3>
+          <ol>
+            <li><a href="https://portal.azure.com" target="_blank" rel="noopener">portal.azure.com</a> → <b>App registrations</b> → <b>New registration</b></li>
+            <li>Name it anything, e.g. “Lazy MS Graph MCP”</li>
+            <li>Copy the <b>Application (client) ID</b> and <b>Directory (tenant) ID</b></li>
+          </ol>
+        </div>
+        <div class="az">
+          <h3>2 · Create a client secret</h3>
+          <ol>
+            <li><b>Certificates &amp; secrets</b> → <b>New client secret</b></li>
+            <li>Copy the <b>Value</b> right away — it's shown once</li>
+          </ol>
+        </div>
+        <div class="az">
+          <h3>3 · Grant Application permissions</h3>
+          <ol>
+            <li><b>API permissions</b> → <b>Add a permission</b> → <b>Microsoft Graph</b> → <b>Application permissions</b></li>
+            <li>Add what you need, then <b>Grant admin consent</b></li>
+          </ol>
+          <div class="perms">
+            <span class="chip">User.Read.All</span><span class="chip">Mail.Read</span><span class="chip">Mail.Send</span><span class="chip">Calendars.ReadWrite</span><span class="chip">Files.ReadWrite.All</span><span class="chip">Team.ReadBasic.All</span>
+          </div>
+        </div>
+      </div>
+      <div class="callout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div><b>Application permissions, not Delegated.</b> The server authenticates with client credentials. Delegated permissions will not work and every call will return 403. If that's what you're seeing, this is why.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>Lazy MS Graph MCP · MIT License · Made by <a href="https://github.com/sagarmk" target="_blank" rel="noopener">Sagar Mankari</a></div>
+    <div class="links">
+      <a href="https://github.com/sagarmk/lazy-mcirosoft-mcp" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/sagarmk/lazy-mcirosoft-mcp/releases" target="_blank" rel="noopener">Releases</a>
+      <a href="https://github.com/sagarmk/lazy-mcirosoft-mcp/issues" target="_blank" rel="noopener">Issues</a>
+      <a href="https://github.com/sagarmk/lazy-mcirosoft-mcp#readme" target="_blank" rel="noopener">README</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // nav shadow on scroll
+  const nav = document.getElementById('nav');
+  const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 8);
+  onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+
+  // tabs
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + btn.dataset.tab));
+    });
+  });
+
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const el = document.getElementById(btn.dataset.copy);
+      try {
+        await navigator.clipboard.writeText(el.innerText);
+        btn.textContent = 'Copied'; btn.classList.add('done');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+      } catch (e) { btn.textContent = 'Select & copy'; }
+    });
+  });
+
+  // latest release version (graceful fallback to the hard-coded one)
+  fetch('https://api.github.com/repos/sagarmk/lazy-mcirosoft-mcp/releases/latest')
+    .then(r => r.ok ? r.json() : null)
+    .then(j => { if (j && j.tag_name) document.getElementById('ver').textContent = j.tag_name; })
+    .catch(() => {});
+</script>
+</body>
+</html>

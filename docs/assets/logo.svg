@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="catGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e0e0e0"/>
+      <stop offset="100%" style="stop-color:#b0b0b0"/>
+    </linearGradient>
+    <linearGradient id="nodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0078d4"/>
+      <stop offset="100%" style="stop-color:#00bcf2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="url(#bg)"/>
+
+  <!-- Graph connection lines (behind the cat) -->
+  <line x1="100" y1="120" x2="200" y2="200" stroke="#0078d4" stroke-width="3" opacity="0.4"/>
+  <line x1="412" y1="120" x2="340" y2="190" stroke="#0078d4" stroke-width="3" opacity="0.4"/>
+  <line x1="100" y1="120" x2="412" y2="120" stroke="#0078d4" stroke-width="3" opacity="0.2"/>
+  <line x1="80" y1="380" x2="170" y2="320" stroke="#0078d4" stroke-width="3" opacity="0.3"/>
+  <line x1="432" y1="400" x2="360" y2="330" stroke="#0078d4" stroke-width="3" opacity="0.3"/>
+  <line x1="80" y1="380" x2="432" y2="400" stroke="#0078d4" stroke-width="3" opacity="0.15"/>
+
+  <!-- Sleeping cat body (curled up, simple shapes) -->
+  <!-- Main body - curled oval -->
+  <ellipse cx="256" cy="300" rx="130" ry="80" fill="url(#catGrad)" opacity="0.95"/>
+
+  <!-- Head -->
+  <circle cx="175" cy="260" r="55" fill="url(#catGrad)" opacity="0.95"/>
+
+  <!-- Left ear -->
+  <polygon points="140,220 125,165 160,210" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="2"/>
+  <!-- Right ear -->
+  <polygon points="195,210 210,155 225,205" fill="#d0d0d0" stroke="#b0b0b0" stroke-width="2"/>
+
+  <!-- Inner ears (pink) -->
+  <polygon points="143,215 132,175 158,210" fill="#e8a0a0" opacity="0.6"/>
+  <polygon points="198,208 208,168 220,205" fill="#e8a0a0" opacity="0.6"/>
+
+  <!-- Closed eyes (sleeping - curved lines) -->
+  <path d="M150,258 Q160,250 170,258" stroke="#555" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M182,255 Q192,247 202,255" stroke="#555" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <ellipse cx="176" cy="268" rx="5" ry="3.5" fill="#e8a0a0"/>
+
+  <!-- Mouth -->
+  <path d="M176,272 Q170,278 166,275" stroke="#888" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M176,272 Q182,278 186,275" stroke="#888" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Whiskers -->
+  <line x1="130" y1="260" x2="100" y2="252" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="130" y1="268" x2="98" y2="268" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="130" y1="276" x2="100" y2="284" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="210" y1="258" x2="238" y2="250" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="210" y1="266" x2="240" y2="266" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="210" y1="274" x2="238" y2="282" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Tail (curled around) -->
+  <path d="M386,290 Q420,270 410,310 Q400,360 360,370 Q320,375 310,350"
+        stroke="#c0c0c0" stroke-width="16" fill="none" stroke-linecap="round"/>
+
+  <!-- Front paw tucked under -->
+  <ellipse cx="200" cy="320" rx="22" ry="14" fill="#d8d8d8"/>
+  <!-- Paw details -->
+  <circle cx="192" cy="326" r="4" fill="#e8a0a0" opacity="0.5"/>
+  <circle cx="200" cy="328" r="4" fill="#e8a0a0" opacity="0.5"/>
+  <circle cx="208" cy="326" r="4" fill="#e8a0a0" opacity="0.5"/>
+
+  <!-- Zzz (sleeping indicator) -->
+  <text x="230" y="215" font-family="Arial, sans-serif" font-weight="bold" font-size="28" fill="#0078d4" opacity="0.6">z</text>
+  <text x="255" y="195" font-family="Arial, sans-serif" font-weight="bold" font-size="22" fill="#0078d4" opacity="0.45">z</text>
+  <text x="273" y="180" font-family="Arial, sans-serif" font-weight="bold" font-size="16" fill="#0078d4" opacity="0.3">z</text>
+
+  <!-- Graph nodes (circles at connection endpoints) -->
+  <circle cx="100" cy="120" r="14" fill="url(#nodeGrad)" opacity="0.9"/>
+  <circle cx="100" cy="120" r="6" fill="#fff" opacity="0.5"/>
+
+  <circle cx="412" cy="120" r="14" fill="url(#nodeGrad)" opacity="0.9"/>
+  <circle cx="412" cy="120" r="6" fill="#fff" opacity="0.5"/>
+
+  <circle cx="80" cy="380" r="12" fill="url(#nodeGrad)" opacity="0.7"/>
+  <circle cx="80" cy="380" r="5" fill="#fff" opacity="0.4"/>
+
+  <circle cx="432" cy="400" r="12" fill="url(#nodeGrad)" opacity="0.7"/>
+  <circle cx="432" cy="400" r="5" fill="#fff" opacity="0.4"/>
+
+  <!-- Small accent nodes -->
+  <circle cx="256" cy="100" r="8" fill="#00bcf2" opacity="0.5"/>
+  <circle cx="440" cy="260" r="6" fill="#0078d4" opacity="0.4"/>
+  <circle cx="72" cy="250" r="6" fill="#0078d4" opacity="0.4"/>
+</svg>
