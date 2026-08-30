@@ -85,6 +85,12 @@
   .btn.primary:hover { filter: brightness(1.08); }
   .btn.sm { padding: 8px 14px; font-size: 0.88rem; }
   .btn svg { width: 18px; height: 18px; }
+  .btn.star svg { width: 16px; height: 16px; color: #ffd479; }
+  .btn.star .count { margin-left: 4px; padding-left: 10px; border-left: 1px solid var(--border-strong); color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .btn.star:hover .count { color: var(--text); }
+  .star-cta { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; }
+  .star-cta h2 { font-size: 1.4rem; }
+  .star-cta p { color: var(--muted); margin-top: 6px; }
 
   /* ---------- hero ---------- */
   .hero { padding: 88px 0 72px; position: relative; overflow: hidden; }
@@ -235,7 +241,7 @@
   @media (max-width: 760px) {
     .nav-links { display: none; }
     .nav .wrap { gap: 12px; }
-    .nav-right .btn.ghost { display: none; }
+    .brand span { display: none; }
     section { padding: 64px 0; }
     .hero { padding: 48px 0 56px; }
     .steps, .features, .cases, .cats, .why-grid, .azure { grid-template-columns: 1fr; }
@@ -248,7 +254,7 @@
 
 <header class="nav" id="nav">
   <div class="wrap">
-    <a class="brand" href="#top"><img src="assets/logo.svg" alt=""> Lazy MS Graph MCP</a>
+    <a class="brand" href="#top"><img src="assets/logo.svg" alt="Lazy MS Graph MCP"> <span>Lazy MS Graph MCP</span></a>
     <nav class="nav-links" aria-label="Sections">
       <a href="#easy">Get started</a>
       <a href="#screens">Screenshots</a>
@@ -258,7 +264,7 @@
       <a href="#install">Install</a>
     </nav>
     <div class="nav-right">
-      <a class="btn sm ghost" href="https://github.com/sagarmk/lazy-mcirosoft-mcp" target="_blank" rel="noopener">GitHub</a>
+      <a class="btn sm star" href="https://github.com/sagarmk/lazy-mcirosoft-mcp" target="_blank" rel="noopener" aria-label="Star sagarmk/lazy-mcirosoft-mcp on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg> Star<span class="count" data-stars hidden></span></a>
       <a class="btn sm primary" href="https://github.com/sagarmk/lazy-mcirosoft-mcp/releases/latest" target="_blank" rel="noopener">Download</a>
     </div>
   </div>
@@ -728,6 +734,19 @@ npm start</pre>
     </div>
   </section>
 
+  <!-- ================= STAR ================= -->
+  <section id="star" style="padding:56px 0">
+    <div class="wrap">
+      <div class="star-cta">
+        <div>
+          <h2>Useful? Give it a star.</h2>
+          <p>Stars help other people find the project — and keep it maintained.</p>
+        </div>
+        <a class="btn star" href="https://github.com/sagarmk/lazy-mcirosoft-mcp" target="_blank" rel="noopener" aria-label="Star sagarmk/lazy-mcirosoft-mcp on GitHub"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg> Star on GitHub<span class="count" data-stars hidden></span></a>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -767,6 +786,17 @@ npm start</pre>
       } catch (e) { btn.textContent = 'Select & copy'; }
     });
   });
+
+  // star count (hidden until it loads; unauthenticated API, fails silently on rate limit)
+  fetch('https://api.github.com/repos/sagarmk/lazy-mcirosoft-mcp')
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if (!j || typeof j.stargazers_count !== 'number' || j.stargazers_count === 0) return;
+      const n = j.stargazers_count;
+      const txt = n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(n);
+      document.querySelectorAll('[data-stars]').forEach(el => { el.textContent = txt; el.hidden = false; });
+    })
+    .catch(() => {});
 
   // latest release version (graceful fallback to the hard-coded one)
   fetch('https://api.github.com/repos/sagarmk/lazy-mcirosoft-mcp/releases/latest')
