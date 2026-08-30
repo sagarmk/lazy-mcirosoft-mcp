@@ -9,6 +9,10 @@
 </p>
 
 <p align="center">
+  <strong><a href="https://sagarmk.github.io/lazy-mcirosoft-mcp/">sagarmk.github.io/lazy-mcirosoft-mcp</a></strong> — screenshots, use cases, and setup guide
+</p>
+
+<p align="center">
   <a href="https://github.com/sagarmk/lazy-mcirosoft-mcp/releases/latest">
     <img src="https://img.shields.io/github/v/release/sagarmk/lazy-mcirosoft-mcp?label=Download%20DMG&style=for-the-badge" alt="Download" />
   </a>
